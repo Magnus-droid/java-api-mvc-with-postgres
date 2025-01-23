@@ -1,5 +1,6 @@
 package com.booleanuk.api.employees;
 
+import com.booleanuk.api.salaries.Salary;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;

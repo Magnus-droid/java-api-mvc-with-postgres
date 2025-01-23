@@ -1,7 +1,6 @@
-package com.booleanuk.api.employees;
+package com.booleanuk.api.salaries;
 
-import com.booleanuk.api.salaries.Salary;
-import com.booleanuk.api.salaries.SalaryRepository;
+import com.booleanuk.api.employees.Employee;
 import org.postgresql.ds.PGSimpleDataSource;
 
 import javax.sql.DataSource;
@@ -12,8 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-
-public class EmployeeRepository {
+public class SalaryRepository {
     DataSource datasource;
     String dbUser;
     String dbURL;
@@ -21,7 +19,7 @@ public class EmployeeRepository {
     String dbDatabase;
     Connection connection;
 
-    public EmployeeRepository() throws SQLException {
+    public SalaryRepository() throws SQLException {
         this.getDatabaseCredentials();
         this.datasource = this.createDataSource();
         this.connection = this.datasource.getConnection();
@@ -47,73 +45,72 @@ public class EmployeeRepository {
         return dataSource;
     }
 
-    public List<Employee> getAll() throws SQLException  {
-        List<Employee> everyone = new ArrayList<>();
-        PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM employees");
+    public List<Salary> getAll() throws SQLException {
+        List<Salary> everyone = new ArrayList<>();
+        PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM salaries");
         ResultSet results = statement.executeQuery();
 
         while (results.next()) {
-            Employee theEmployee = new Employee(results.getLong("id"), results.getString("name"), results.getString("jobName"), results.getString("salaryGrade"), results.getString("department"));
-            everyone.add(theEmployee);
+            Salary theSalary = new Salary(results.getLong("id"), results.getString("grade"), results.getInt("minSalary"), results.getInt("maxSalary"));
+            everyone.add(theSalary);
         }
         return everyone;
     }
 
-    public Employee get(long id) throws SQLException {
-        PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM employees WHERE id = ?");
+
+    public Salary get(long id) throws SQLException {
+        PreparedStatement statement = this.connection.prepareStatement("SELECT * FROM salaries WHERE id = ?");
         statement.setLong(1, id);
         ResultSet results = statement.executeQuery();
-        Employee employee = null;
+        Salary salary = null;
 
         if (results.next()) {
-            employee = new Employee(results.getLong("id"), results.getString("name"), results.getString("jobName"), results.getString("salaryGrade"), results.getString("department"));
+
+            salary = new Salary(results.getLong("id"),results.getString("grade"), results.getInt("minSalary"), results.getInt("maxSalary"));
         }
-        return employee;
+        return salary;
     }
 
-    public Employee update(long id, Employee employee) throws SQLException {
-        String SQL = "UPDATE employees " +
-                "SET name = ? ," +
-                "jobName = ? ," +
-                "salaryGrade = ? ," +
-                "department = ? " +
+    public Salary update(long id, Salary salary) throws SQLException {
+        String SQL = "UPDATE salaries " +
+                "SET grade = ? ," +
+                "minSalary = ? ," +
+                "maxSalary = ? ," +
                 "WHERE id = ? ";
         PreparedStatement statement = this.connection.prepareStatement(SQL);
-        statement.setString(1, employee.getName());
-        statement.setString(2, employee.getJobName());
-        statement.setString(3, employee.getSalaryGrade());
-        statement.setString(4, employee.getDepartment());
-        statement.setLong(5, id);
+        statement.setString(1, salary.getGrade());
+        statement.setString(2, String.valueOf(salary.getMinSalary()));
+        statement.setString(3, String.valueOf(salary.getMaxSalary()));
+        statement.setLong(4, id);
         int rowsAffected = statement.executeUpdate();
-        Employee updatedEmployee = null;
+        Salary updatedSalary = null;
 
         if (rowsAffected > 0) {
-            updatedEmployee = this.get(id);
+            updatedSalary = this.get(id);
         }
-        return updatedEmployee;
+        return updatedSalary;
     }
 
-    public Employee delete(long id) throws SQLException {
-        String SQL = "DELETE FROM employees WHERE id = ?";
+    public Salary delete(long id) throws SQLException {
+        String SQL = "DELETE FROM salaries WHERE id = ?";
         PreparedStatement statement = this.connection.prepareStatement(SQL);
-        Employee deletedEmployee = null;
-        deletedEmployee = this.get(id);
+        Salary deletedSalary = null;
+        deletedSalary = this.get(id);
         statement.setLong(1, id);
         int rowsAffected = statement.executeUpdate();
 
         if (rowsAffected == 0) {
-            deletedEmployee = null;
+            deletedSalary = null;
         }
-        return deletedEmployee;
+        return deletedSalary;
     }
 
-    public Employee add(Employee employee) throws SQLException {
-        String SQL = "INSERT INTO employees(name, jobName, salaryGrade, department) VALUES(?, ?, ?, ?)";
+    public Salary add(Salary salary) throws SQLException {
+        String SQL = "INSERT INTO salaries(grade, minSalary, maxSalary) VALUES(?, ?, ?)";
         PreparedStatement statement = this.connection.prepareStatement(SQL, Statement.RETURN_GENERATED_KEYS);
-        statement.setString(1, employee.getName());
-        statement.setString(2, employee.getJobName());
-        statement.setString(3, employee.getSalaryGrade());
-        statement.setString(4, employee.getDepartment());
+        statement.setString(1, salary.getGrade());
+        statement.setString(2, String.valueOf(salary.getMinSalary()));
+        statement.setString(3, String.valueOf(salary.getMaxSalary()));
         int rowsAffected = statement.executeUpdate();
         long newId = 0;
 
@@ -125,11 +122,11 @@ public class EmployeeRepository {
             } catch (Exception e) {
                 System.out.println("Oops: " + e);
             }
-            employee.setId(newId);
+            salary.setId(newId);
         } else {
-            employee = null;
+            statement = null;
         }
-        return employee;
+        return salary;
     }
 
 }
